@@ -1,0 +1,71 @@
+%YAML 1.2
+---
+name: prom
+file_extensions:
+  - prom
+
+scope: source.prom
+
+variables:
+  metric: '[a-zA-Z_-]+'
+  metricType: '(counter|gauge|histogram|summary|untyped)'
+  labelKey: '[a-zA-Z0-9_-]+'
+
+contexts:
+  prototype:
+    - include: comments
+
+  main:
+    - match: '({{metric}})\{'
+      scope: punctuation.section.block.begin.prom
+      captures:
+        1: entity.name.function
+      push:
+        - match: '\}\s+(\b(-)?[0-9.]+\b)'
+          captures:
+            1: constant.numeric.prom
+          scope: punctuation.section.block.end.prom
+          pop: true
+
+        - match: '({{labelKey}})(=)"'
+          captures:
+            1: variable.parameter
+            2: keyword.operator.prom
+          push: inside_string
+    - match: '({{metric}})\s+(\b(-)?[0-9.]+\b)'
+      captures:
+        1: entity.name.constant.prom
+        2: constant.numeric.prom
+
+  strings:
+    - match: "(\")"
+      scope: punctuation.definition.string.begin.prom
+      push: inside_string
+
+  inside_string:
+    - meta_include_prototype: false
+    - meta_scope: string.quoted.double.prom
+    - match: '\.'
+      scope: constant.character.escape.prom
+    - match: "(\")"
+      scope: punctuation.definition.string.end.prom
+      pop: true
+
+  comments:
+    - match: '#'
+      scope: punctuation.definition.comment.prom
+      push:
+        - meta_scope: comment.line.number-sign.prom
+        - match: '(TYPE)\s+({{metric}})\s+({{metricType}})'
+          captures:
+            1: markup.bold
+            2: markup.italic
+            3: keyword.other.prom
+        - match: '(HELP)\s+({{metric}})\s+(.*)'
+          captures:
+            1: markup.bold
+            2: markup.italic
+            3: comment
+          scope: keyword.other.prom
+        - match: $\n?
+          pop: true
