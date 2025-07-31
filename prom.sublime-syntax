@@ -7,7 +7,7 @@ file_extensions:
 scope: source.prom
 
 variables:
-  metric: '[a-zA-Z_-]+'
+  metric: '[a-zA-Z][a-zA-Z_0-9-]+'
   metricType: '(counter|gauge|histogram|summary|untyped)'
   labelKey: '[a-zA-Z0-9_-]+'
 
